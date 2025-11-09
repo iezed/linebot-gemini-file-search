@@ -35,10 +35,10 @@
 - 自動識別對話類型，無需手動設定
 
 ### 📋 檔案管理功能
-- **列出檔案**：輸入「列出檔案」查看已上傳的所有文件
-- **Carousel 展示**：使用 LINE 卡片式介面美觀呈現檔案清單
-- **一鍵刪除**：每個檔案都有刪除按鈕，輕鬆管理文件庫
+- **AI 口語化列表**：使用 Google ADK Agent 以自然對話方式介紹檔案
 - **智能識別**：支援多種關鍵字（列出檔案、顯示檔案、list files 等）
+- **Quick Reply 快速操作**：上傳成功後提供「生成摘要」、「重點整理」等快捷按鈕
+- **明確檔案指定**：Quick Reply 自動帶入檔案名稱，避免混淆
 
 ### 🚀 部署簡單
 - 支援 Docker 容器化部署
@@ -56,41 +56,35 @@
 
        現在您可以詢問我關於這個檔案的任何問題。
 
-👤 你: 這次會議的主要決議是什麼？
-🤖 Bot: 根據會議記錄，主要決議包括：
+       [Quick Reply 按鈕]
+       📝 生成檔案摘要 | 📌 重點整理 | 📋 列出檔案
+
+👤 你: [點擊「📝 生成檔案摘要」]
+     → 自動發送「請幫我生成「會議記錄.pdf」這個檔案的摘要」
+
+🤖 Bot: 好的！這份會議記錄主要記錄了 2025 年第一季的營運會議...
+
+       主要決議包括：
        1. 下季度預算增加 15%
        2. 新產品預計 6 月上市
        3. 人力資源部門將擴編 3 名員工
        ...
 ```
 
-### 📋 列出與管理檔案
+### 📋 列出檔案（AI 口語化）
 
 ```
 👤 你: 列出檔案
-🤖 Bot: [顯示 Carousel 卡片]
-       📁 找到 3 個文件
+🤖 Bot: 我看到你上傳了 3 個檔案唷！
 
-       [卡片 1]
-       📄 會議記錄.pdf
-       上傳時間：2025-01-08 14:30
-       [🗑️ 刪除檔案]
+       首先是「會議記錄.pdf」，這是在 1月8日下午2點半上傳的。
+       接著是「技術文件.docx」，是在下午3點20分傳的。
+       最後一個是「報告.txt」，這個是在下午4點10分上傳的。
 
-       [卡片 2]
-       📄 技術文件.docx
-       上傳時間：2025-01-08 15:20
-       [🗑️ 刪除檔案]
-
-       [卡片 3]
-       📄 報告.txt
-       上傳時間：2025-01-08 16:10
-       [🗑️ 刪除檔案]
-
-👤 你: [點擊刪除按鈕]
-🤖 Bot: ✅ 檔案已刪除成功！
-
-       如需查看剩餘檔案，請輸入「列出檔案」。
+       需要我幫你查詢哪個檔案的內容呢？😊
 ```
+
+> 💡 **提示**：使用 Google ADK Agent 讓 AI 用自然對話方式介紹檔案，比傳統的清單或卡片更親切！
 
 ### 🖼️ 圖片分析
 
@@ -107,8 +101,9 @@
 
 - **Python 3.9+**
 - **FastAPI** - 高效能異步 Web 框架
-- **LINE Messaging API** - LINE Bot 介面
+- **LINE Messaging API** - LINE Bot 介面（含 Quick Reply）
 - **Google Gemini API** - 文件搜尋與 AI 問答
+- **Google ADK (Agent Development Kit)** - 口語化檔案管理 Agent
 - **Docker** - 容器化部署
 
 ## 📦 快速開始
@@ -202,7 +197,7 @@ https://你的-ngrok-網址.ngrok.io/
 
 ### 📋 管理已上傳的檔案
 
-**列出檔案：**
+**列出檔案（AI 口語化）：**
 
 支援多種關鍵字來查看已上傳的文件：
 - 「列出檔案」或「列出文件」
@@ -210,19 +205,20 @@ https://你的-ngrok-網址.ngrok.io/
 - 「我的檔案」或「檔案列表」
 - 英文：「list files」、「show files」、「my files」
 
-Bot 會用 **Carousel 卡片**展示所有文件，每個卡片包含：
-- 📄 檔案名稱
-- 🕐 上傳時間
-- 🗑️ 刪除按鈕
+Bot 會用 **Google ADK Agent** 以自然對話方式介紹檔案：
+- 🤖 口語化描述（而非條列式清單）
+- 📅 自動格式化上傳時間
+- 💬 友善親切的語氣
+- 🎯 智能總結（檔案多時會挑重點說明）
 
-**刪除檔案：**
+**Quick Reply 快速操作：**
 
-1. 輸入「列出檔案」查看文件清單
-2. 點擊任一檔案卡片下方的「🗑️ 刪除檔案」按鈕
-3. Bot 會立即刪除該檔案並回覆確認訊息
-4. 已刪除的檔案將無法再被查詢
+上傳檔案成功後，Bot 會提供快捷按鈕：
+- 📝 **生成檔案摘要** - 自動帶入檔案名稱「請幫我生成『檔名』這個檔案的摘要」
+- 📌 **重點整理** - 自動帶入檔案名稱「請幫我整理『檔名』的重點」
+- 📋 **列出檔案** - 查看所有已上傳的文件
 
-> 💡 **提示**：刪除是永久的，請謹慎操作！
+> 💡 **提示**：Quick Reply 會自動帶入剛上傳的檔案名稱，避免多檔案時的混淆！
 
 ### 📁 檔案管理方式
 
@@ -336,11 +332,14 @@ gcloud logging read "resource.type=cloud_run_revision AND resource.labels.servic
 1. **上傳多份文件**：可以連續上傳多份文件，Bot 會記住所有文件並在查詢時搜尋
 2. **圖片即時分析**：圖片不需要「上傳」，直接傳送就會立即分析並回覆
 3. **文件持久化**：上傳的文件會持續保存在 File Search Store，可隨時查詢
-4. **檔案管理**：
-   - 輸入「列出檔案」隨時查看已上傳的文件清單
-   - 使用刪除按鈕管理不需要的文件
-   - Carousel 最多顯示 10 個檔案（LINE 限制）
-5. **清理文件庫**：定期使用「列出檔案」功能檢查並刪除不需要的文件
+4. **Quick Reply 快捷操作**：
+   - 上傳檔案後立即使用 Quick Reply 按鈕（生成摘要、重點整理）
+   - Quick Reply 會自動帶入檔案名稱，避免多檔案時混淆
+   - 點擊按鈕比手動輸入更快速方便
+5. **AI 口語化檔案列表**：
+   - 輸入「列出檔案」會得到自然對話式的回應
+   - AI 會用親切的語氣介紹每個檔案和上傳時間
+   - 比傳統清單更友善、更易讀
 6. **支援的檔案類型**：
    - 文件：取決於 Google Gemini File API 的支援
    - 圖片：JPG、JPEG、PNG、GIF、WebP
@@ -366,6 +365,15 @@ A: Google Gemini 支援多種語言，包括繁體中文、簡體中文、英文
 
 **Q: 可以處理多大的檔案？**
 A: 取決於 Google Gemini File API 的限制，一般文件都沒問題。圖片建議不超過 10MB。
+
+**Q: Quick Reply 按鈕是什麼？**
+A: Quick Reply 是上傳檔案成功後出現的快捷按鈕（📝 生成檔案摘要、📌 重點整理、📋 列出檔案）。點擊按鈕會自動發送完整問題，比手動輸入更方便，且會自動帶入檔案名稱避免混淆。
+
+**Q: 為什麼列出檔案時不是顯示清單或卡片？**
+A: 我們使用 Google ADK Agent 讓 AI 用自然對話方式介紹檔案，而非傳統的條列式清單或卡片。這樣的呈現更友善、更像真人對話，使用者體驗更好。AI 會根據檔案數量智能調整說明方式。
+
+**Q: 如何自訂 Quick Reply 按鈕的文字？**
+A: 在 `main.py` 的 `handle_document_message()` 函數中可以修改 Quick Reply 的設定。你可以調整按鈕的 `label`（顯示文字）和 `text`（發送內容）。
 
 ## 🔧 進階設定
 
@@ -398,6 +406,56 @@ contents=["請詳細描述這張圖片的內容，包括主要物品、場景、
 - `"這張圖片中有哪些文字？"` - 專注於 OCR
 - `"這張圖片的主題是什麼？"` - 摘要式回應
 
+### 自訂 Quick Reply 按鈕
+
+在 `main.py` 的檔案上傳成功處理部分（約第 447-452 行）：
+
+```python
+quick_reply = QuickReply(items=[
+    QuickReplyButton(action=MessageAction(
+        label="📝 生成檔案摘要",
+        text=f"請幫我生成「{file_name}」這個檔案的摘要"
+    )),
+    QuickReplyButton(action=MessageAction(
+        label="📌 重點整理",
+        text=f"請幫我整理「{file_name}」的重點"
+    )),
+    QuickReplyButton(action=MessageAction(
+        label="📋 列出檔案",
+        text="列出檔案"
+    )),
+])
+```
+
+你可以：
+- 修改 `label` 來改變按鈕顯示文字
+- 修改 `text` 來改變點擊後發送的內容
+- 新增或移除按鈕（LINE 限制最多 13 個）
+- 使用 `{file_name}` 變數來自動帶入檔案名稱
+
+### 自訂 FileManagerAgent 的語氣和風格
+
+在 `file_manager_agent/agent.py` 中修改 agent instruction（約第 24-33 行）：
+
+```python
+instruction="""你是一個友善的檔案管理助手。
+
+當使用者要求列出檔案時：
+1. 使用 list_files tool 來取得檔案清單
+2. 用口語化、友善的方式呈現結果
+3. 不要使用條列式或表格，用自然的對話方式說明
+4. 例如：「我看到你上傳了 3 個檔案唷！首先是『會議記錄.pdf』...」
+5. 語氣要輕鬆、親切
+
+回應時請用繁體中文。"""
+```
+
+你可以調整：
+- **語氣風格**：從「親切」改為「專業」、「幽默」等
+- **語言**：改為英文或其他語言
+- **呈現方式**：要求 AI 用特定格式（如分類、排序等）
+- **細節程度**：決定要說明到多詳細
+
 ## 📝 授權條款
 
 MIT License - 歡迎自由使用、修改、分享！
@@ -409,7 +467,9 @@ MIT License - 歡迎自由使用、修改、分享！
 ## 📚 相關連結
 
 - [Google Gemini File Search 官方文件](https://ai.google.dev/gemini-api/docs/file-search?hl=zh-tw)
+- [Google ADK (Agent Development Kit) 文件](https://ai.google.dev/gemini-api/docs/adk)
 - [LINE Messaging API 文件](https://developers.line.biz/en/docs/messaging-api/)
+- [LINE Messaging API - Quick Reply](https://developers.line.biz/en/docs/messaging-api/using-quick-reply/)
 - [FastAPI 文件](https://fastapi.tiangolo.com/)
 
 ---
