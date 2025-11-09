@@ -444,10 +444,10 @@ async def handle_document_message(event: MessageEvent, message: FileMessage):
         print(f"Error deleting file: {e}")
 
     if success:
-        # Create Quick Reply buttons for common actions
+        # Create Quick Reply buttons for common actions with specific file name
         quick_reply = QuickReply(items=[
-            QuickReplyButton(action=MessageAction(label="📝 生成檔案摘要", text="請幫我生成這個檔案的摘要")),
-            QuickReplyButton(action=MessageAction(label="📌 重點整理", text="請幫我整理這個檔案的重點")),
+            QuickReplyButton(action=MessageAction(label="📝 生成檔案摘要", text=f"請幫我生成「{file_name}」這個檔案的摘要")),
+            QuickReplyButton(action=MessageAction(label="📌 重點整理", text=f"請幫我整理「{file_name}」的重點")),
             QuickReplyButton(action=MessageAction(label="📋 列出檔案", text="列出檔案")),
         ])
 
