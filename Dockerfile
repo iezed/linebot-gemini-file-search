@@ -1,13 +1,15 @@
 FROM python:3.10.17
 
-# 將專案複製到容器中
-COPY . /app
+# 設定工作目錄
 WORKDIR /app
 
-# 安裝必要的套件
-RUN pip install --upgrade pip
+# 先複製 requirements.txt 並安裝依賴（利用 Docker cache）
 COPY requirements.txt .
+RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
+
+# 再複製專案檔案
+COPY . /app
 
 EXPOSE 8080
 CMD uvicorn main:app --host=0.0.0.0 --port=$PORT
