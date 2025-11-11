@@ -81,7 +81,7 @@ class FileManagerAgent:
             user_prompt = "請列出所有已上傳的檔案"
             content = types.Content(
                 role="user",
-                parts=[types.Part.from_text(user_prompt)]
+                parts=[types.Part(text=user_prompt)]
             )
 
             # Run the agent and collect responses
