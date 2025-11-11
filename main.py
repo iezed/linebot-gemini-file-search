@@ -581,9 +581,14 @@ def is_list_files_intent(text: str) -> bool:
     return any(keyword in text_lower for keyword in list_keywords)
 
 
-async def send_files_carousel(event: MessageEvent, documents: list):
+async def send_files_carousel(event, documents: list):
     """
     Send files as LINE Carousel Template.
+    Works with both MessageEvent and PostbackEvent.
+
+    Args:
+        event: MessageEvent or PostbackEvent with reply_token
+        documents: List of document dicts with 'name', 'display_name', 'create_time'
     """
     if not documents:
         no_files_msg = TextSendMessage(text="📁 目前沒有任何文件。\n\n請先上傳文件檔案，就可以查詢囉！")
@@ -697,12 +702,10 @@ async def handle_postback(event: PostbackEvent):
                 await line_bot_api.reply_message(event.reply_token, reply_msg)
 
         elif action == 'list_files':
-            # Handle list files request
+            # Handle list files request - show carousel with delete buttons
             print(f"[DEBUG] List files for store: {store_name}")
-            agent = FileManagerAgent(store_name, store_name_cache)
-            response_text = await agent.handle_list_files()
-            reply_msg = TextSendMessage(text=response_text)
-            await line_bot_api.reply_message(event.reply_token, reply_msg)
+            documents = await list_documents_in_store(store_name)
+            await send_files_carousel(event, documents)
 
         elif action == 'view_citation':
             # Handle view citation request
@@ -765,11 +768,9 @@ async def handle_text_message(event: MessageEvent, message):
 
     # Check if user wants to list files
     if is_list_files_intent(query):
-        # Use File Manager Agent for conversational response
-        agent = FileManagerAgent(store_name, store_name_cache)
-        response_text = await agent.handle_list_files()
-        reply_msg = TextSendMessage(text=response_text)
-        await line_bot_api.reply_message(event.reply_token, reply_msg)
+        # Show files carousel with delete buttons
+        documents = await list_documents_in_store(store_name)
+        await send_files_carousel(event, documents)
         return
 
     # Otherwise, query file search
