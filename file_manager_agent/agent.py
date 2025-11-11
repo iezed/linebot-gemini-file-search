@@ -5,12 +5,15 @@ Provides conversational interface for managing files.
 
 import os
 from google.adk.agents import Agent
-from google.adk.runners import InMemoryRunner
+from google.adk import Runner
+from google.adk.sessions import InMemorySessionService
+from google.genai import types
 
 from .tools import list_files_tool
 
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY") or ""
+APP_NAME = "file_manager"
 
 
 class FileManagerAgent:
@@ -50,10 +53,12 @@ class FileManagerAgent:
             tools=[self._list_files],  # Pass the callable function
         )
 
-        # Initialize the runner
-        self.runner = InMemoryRunner(
+        # Initialize session service and runner
+        self.session_service = InMemorySessionService()
+        self.runner = Runner(
+            app_name=APP_NAME,
             agent=self.agent,
-            app_name="file_manager"
+            session_service=self.session_service
         )
 
     async def handle_list_files(self) -> str:
@@ -64,29 +69,37 @@ class FileManagerAgent:
             Conversational response about the files
         """
         try:
-            # Use the ADK runner to process the request
+            # Create a session for this interaction
+            user_id = f"user_{self.store_name}"
+            session = await self.session_service.create_session(
+                app_name=APP_NAME,
+                user_id=user_id,
+                session_id=f"list_files_{self.store_name}"
+            )
+
+            # Create the user message
             user_prompt = "請列出所有已上傳的檔案"
+            content = types.Content(
+                role="user",
+                parts=[types.Part.from_text(user_prompt)]
+            )
 
-            # Run the agent
-            response = await self.runner.run(user_prompt)
+            # Run the agent and collect responses
+            response_texts = []
+            async for event in self.runner.run_async(
+                user_id=user_id,
+                session_id=session.id,
+                new_message=content
+            ):
+                if event.content and event.content.parts:
+                    for part in event.content.parts:
+                        if hasattr(part, 'text') and part.text:
+                            response_texts.append(part.text)
 
-            # Extract the response text
-            if hasattr(response, 'text') and response.text:
-                return response.text
-            elif hasattr(response, 'content') and response.content:
-                return response.content
-            elif isinstance(response, str):
-                return response
+            # Join all response texts
+            if response_texts:
+                return '\n'.join(response_texts)
             else:
-                # Try to get the last message from the runner
-                messages = self.runner.get_messages()
-                if messages and len(messages) > 0:
-                    last_msg = messages[-1]
-                    if hasattr(last_msg, 'content'):
-                        return last_msg.content
-                    elif hasattr(last_msg, 'text'):
-                        return last_msg.text
-
                 return "目前沒有找到任何檔案唷！"
 
         except Exception as e:
