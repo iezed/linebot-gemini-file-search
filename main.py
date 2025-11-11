@@ -11,7 +11,9 @@ from typing import Optional
 from linebot.models import (
     MessageEvent, TextSendMessage, FileMessage, ImageMessage,
     PostbackEvent, TemplateSendMessage, CarouselTemplate, CarouselColumn,
-    PostbackAction, QuickReply, QuickReplyButton, MessageAction
+    PostbackAction, QuickReply, QuickReplyButton, MessageAction,
+    FlexSendMessage, BubbleContainer, BoxComponent, TextComponent,
+    ButtonComponent, SeparatorComponent, CarouselContainer
 )
 from linebot.exceptions import InvalidSignatureError
 from linebot.aiohttp_async_http_client import AiohttpAsyncHttpClient
@@ -609,7 +611,7 @@ def is_list_files_intent(text: str) -> bool:
 
 async def send_files_carousel(event, documents: list):
     """
-    Send files as LINE Carousel Template.
+    Send files as LINE Flex Message Carousel.
     Works with both MessageEvent and PostbackEvent.
 
     Args:
@@ -621,10 +623,10 @@ async def send_files_carousel(event, documents: list):
         await line_bot_api.reply_message(event.reply_token, no_files_msg)
         return
 
-    # LINE Carousel限制最多10個
+    # LINE Flex Carousel 限制最多 10 個 bubble
     documents = documents[:10]
 
-    columns = []
+    bubbles = []
     for doc in documents:
         # 提取檔名（去除路徑部分）
         display_name = doc.get('display_name', 'Unknown')
@@ -639,27 +641,70 @@ async def send_files_carousel(event, documents: list):
             except:
                 create_time = create_time[:16]  # 簡單截斷
 
-        # 建立每個檔案的 Column
-        column = CarouselColumn(
-            thumbnail_image_url='https://via.placeholder.com/1024x1024/4CAF50/FFFFFF?text=File',  # 預設圖片
-            title=display_name[:40],  # LINE 限制標題長度
-            text=f"上傳時間：{create_time[:20]}" if create_time else "文件檔案",
-            actions=[
-                PostbackAction(
-                    label='🗑️ 刪除檔案',
-                    data=f"action=delete_file&doc_name={doc['name']}"
-                )
-            ]
+        # 建立每個檔案的 Bubble
+        bubble = BubbleContainer(
+            body=BoxComponent(
+                layout='vertical',
+                contents=[
+                    # 檔案圖示
+                    TextComponent(
+                        text='📄',
+                        size='xxl',
+                        align='center',
+                        margin='md'
+                    ),
+                    # 檔案名稱
+                    TextComponent(
+                        text=display_name[:40],  # 限制長度
+                        weight='bold',
+                        size='lg',
+                        align='center',
+                        wrap=True,
+                        margin='md'
+                    ),
+                    # 分隔線
+                    SeparatorComponent(margin='md'),
+                    # 上傳時間
+                    TextComponent(
+                        text=f"上傳時間\n{create_time}" if create_time else "文件檔案",
+                        size='sm',
+                        color='#999999',
+                        align='center',
+                        wrap=True,
+                        margin='md'
+                    )
+                ],
+                padding_all='lg'
+            ),
+            footer=BoxComponent(
+                layout='vertical',
+                contents=[
+                    # 刪除按鈕
+                    ButtonComponent(
+                        action=PostbackAction(
+                            label='🗑️ 刪除檔案',
+                            data=f"action=delete_file&doc_name={doc['name']}"
+                        ),
+                        style='primary',
+                        color='#e74c3c',
+                        height='sm'
+                    )
+                ],
+                padding_all='sm'
+            )
         )
-        columns.append(column)
+        bubbles.append(bubble)
 
-    carousel_template = CarouselTemplate(columns=columns)
-    template_message = TemplateSendMessage(
+    # 建立 Carousel Container
+    carousel_container = CarouselContainer(contents=bubbles)
+
+    # 建立 Flex Message
+    flex_message = FlexSendMessage(
         alt_text=f'📁 找到 {len(documents)} 個文件',
-        template=carousel_template
+        contents=carousel_container
     )
 
-    await line_bot_api.reply_message(event.reply_token, template_message)
+    await line_bot_api.reply_message(event.reply_token, flex_message)
 
 
 async def handle_postback(event: PostbackEvent):
