@@ -20,6 +20,14 @@ from linebot.exceptions import InvalidSignatureError
 from linebot.aiohttp_async_http_client import AiohttpAsyncHttpClient
 from linebot import AsyncLineBotApi, WebhookParser
 
+# LINE Bot SDK v3 imports for loading animation
+try:
+    from linebot.v3.messaging.models import ShowLoadingAnimationRequest
+except ImportError:
+    # Fallback for older SDK versions
+    print("[WARNING] ShowLoadingAnimationRequest not available in this SDK version")
+    ShowLoadingAnimationRequest = None
+
 # Google GenAI imports
 from google import genai
 from google.genai import types
@@ -111,6 +119,36 @@ def get_store_name(event) -> str:
         return f"room_{event.source.room_id}"
     else:
         return f"unknown_{event.source.user_id}"
+
+
+async def show_loading_animation(chat_id: str, loading_seconds: int = 20):
+    """
+    Show loading animation to improve UX during long operations.
+
+    Args:
+        chat_id: User ID or Group ID (reply target)
+        loading_seconds: Duration in seconds (5-60, default 20)
+
+    Note: This is a fire-and-forget operation. If it fails, it won't affect the main operation.
+    """
+    # Skip if ShowLoadingAnimationRequest is not available
+    if ShowLoadingAnimationRequest is None:
+        print(f"[INFO] Loading animation not available (SDK version)")
+        return
+
+    try:
+        # Ensure loading_seconds is within valid range (5-60 seconds)
+        loading_seconds = max(5, min(60, loading_seconds))
+
+        request = ShowLoadingAnimationRequest(
+            chat_id=chat_id,
+            loading_seconds=loading_seconds
+        )
+        await line_bot_api.show_loading_animation(request)
+        print(f"[INFO] Loading animation started for chat: {chat_id} ({loading_seconds}s)")
+    except Exception as e:
+        print(f"[WARNING] Failed to show loading animation: {e}")
+        # Don't fail the main operation if animation fails
 
 
 def get_reply_target(event: MessageEvent) -> str:
@@ -769,6 +807,9 @@ async def handle_image_message(event: MessageEvent, message: ImageMessage):
     reply_target = get_reply_target(event)
     file_name = f"image_{message.id}.jpg"
 
+    # Show loading animation (15 seconds for image analysis)
+    await show_loading_animation(reply_target, loading_seconds=15)
+
     # Download image
     reply_msg = TextSendMessage(text="正在分析您的圖片，請稍候...")
     await line_bot_api.reply_message(event.reply_token, reply_msg)
@@ -810,6 +851,11 @@ async def handle_document_message(event: MessageEvent, message: FileMessage):
         await line_bot_api.reply_message(event.reply_token, error_msg)
         print(f"[WARNING] Unsupported file format: {file_name} ({file_ext})")
         return
+
+    # Show loading animation based on file type
+    # .ppt files need more time (60s), others need 30s
+    loading_duration = 60 if file_ext == '.ppt' else 30
+    await show_loading_animation(reply_target, loading_seconds=loading_duration)
 
     # Download file
     reply_msg = TextSendMessage(text="正在處理您的檔案，請稍候...")

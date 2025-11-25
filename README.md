@@ -563,6 +563,10 @@ gcloud logging read "resource.type=cloud_run_revision AND resource.labels.servic
    - **自動轉換**：
      - .doc 檔案自動轉換為 .docx（2-5秒）
      - .ppt 檔案自動轉換為 .pptx（10-30秒）
+7. **Loading 動畫優化體驗** 🆕：
+   - 上傳檔案時自動顯示 LINE 官方 loading 動畫
+   - 根據檔案類型智能調整顯示時間（圖片 15s / 文件 30s / PPT 60s）
+   - 讓用戶清楚知道 Bot 正在處理中
 
 ## 🤔 常見問題
 
